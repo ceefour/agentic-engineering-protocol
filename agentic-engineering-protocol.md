@@ -1,7 +1,7 @@
-# Agentic Engineering Protocol (AEP) v1.13
+# Agentic Engineering Protocol (AEP) v1.14
 
 **Status:** Canonical  
-**Version:** 1.13  
+**Version:** 1.14  
 **Purpose:** A framework-independent operating protocol for rigorous, transparent, adaptive, evidence-driven collaboration between humans and AI coding agents.
 
 ---
@@ -26,10 +26,42 @@ AEP follows these principles:
 14. **Preserve recoverability and safe Git state.**
 15. **Capture valuable reusable engineering knowledge without unnecessary documentation ceremony.**
 16. **Production deployments must be traceable, planned, authorized, and verified against actual production reality.**
+17. **A project may span multiple explicitly declared repositories/resources; repository boundaries and authority must remain explicit.**
 
 ---
 
-# 2. Primary Operating Modes
+# 2. Project Model
+
+AEP defines a project as an **engineering system**, not necessarily a single filesystem directory or Git repository.
+
+A project may contain:
+
+- one primary workspace/repository,
+- zero or more referenced repositories/directories/resources.
+
+Example:
+
+```text
+PROJECT: Miluv
+
+├── miluv-web
+│   Primary repository
+│   Frontend
+│
+└── miluv-api
+    Referenced repository
+    Backend API
+```
+
+The primary workspace is the environment from which the agent is operating.
+
+A referenced resource is an intentionally declared resource that participates in the project's engineering context.
+
+A filesystem path alone does not make a resource a project reference.
+
+---
+
+# 3. Primary Operating Modes
 
 AEP has exactly **11 primary operating modes**.
 
@@ -45,11 +77,11 @@ AEP has exactly **11 primary operating modes**.
 10. **ALIGN** — resolve conflicts between requirements, documentation, code, and observed reality.
 11. **RECOVER** — recover from mistakes, unexpected state, failed execution, or operational failure.
 
-Supporting commands and cross-cutting systems do **not** constitute additional primary modes.
+Supporting commands and cross-cutting mechanisms are not additional primary modes.
 
 ---
 
-# 3. Autonomous Mode Transition System (AMTS)
+# 4. Autonomous Mode Transition System (AMTS)
 
 AEP permits autonomous transitions between modes when authority, risk, and workflow state permit.
 
@@ -75,35 +107,19 @@ Conditional transitions may occur only when:
 - required human gates have been satisfied,
 - actions remain sufficiently reversible and safe.
 
-### Human-gated transitions
-
-Human authorization is required when appropriate for:
-
-- high-risk architecture changes,
-- destructive or irreversible operations,
-- material ambiguity,
-- major scope changes,
-- security/privacy-sensitive decisions,
-- major authority decisions,
-- production actions requiring human authorization.
-
-### ASK HUMAN
+High-risk architecture changes, destructive actions, material ambiguity, major scope decisions, security/privacy-sensitive decisions, and other high-impact actions require appropriate human authorization.
 
 `ASK HUMAN` is a **control state**, not a primary mode.
 
-The agent enters it when a human decision, authorization, clarification, observation, or capability is required.
+Transition budgets should prevent uncontrolled loops.
 
-### Transition budgets
-
-The agent should maintain transition budgets to prevent uncontrolled loops.
-
-Automatic loops such as:
+Automatic bounded loops such as:
 
 ```text
 DEBUG ↔ IMPLEMENT ↔ VERIFY
 ```
 
-are permitted when bounded and justified.
+are permitted when justified.
 
 If the current plan becomes invalid:
 
@@ -111,11 +127,11 @@ If the current plan becomes invalid:
 → REPLAN
 ```
 
-ALIGN and RECOVER may interrupt normal workflows when required.
+ALIGN and RECOVER may interrupt normal workflows.
 
 ---
 
-# 4. Human Authorization
+# 5. Human Authorization
 
 ## `/approve`
 
@@ -125,18 +141,20 @@ ALIGN and RECOVER may interrupt normal workflows when required.
 
 Distinctions:
 
-- **PLAN** = proposal
-- **/approve** = authorization
-- **IMPLEMENT** = execution
-- **/replan** = revise an invalid plan
-- **/align** = resolve conflicts
-- **ASK HUMAN** = request human decision/input
+```text
+PLAN      = proposal
+/approve  = authorization
+IMPLEMENT = execution
+/replan   = revise invalid plan
+/align    = resolve conflict
+ASK HUMAN = request human decision/input
+```
 
 `/approve` cannot bypass a required high-risk authorization.
 
 ---
 
-# 5. Workflow Continuation
+# 6. Workflow Continuation
 
 ## `/continue`
 
@@ -144,43 +162,41 @@ Distinctions:
 
 > Continue the current workflow from the current state if no human decision, authorization, or mandatory pause prevents continuation.
 
-It must:
+It must respect:
 
-- inspect current state,
-- identify the appropriate next action,
-- respect authority boundaries,
-- respect human gates,
-- avoid bypassing unresolved material ambiguity.
+- authority,
+- human gates,
+- unresolved ambiguity,
+- workflow state,
+- risk boundaries.
 
-It must never override a mandatory human gate.
+It must never bypass a mandatory human gate.
 
 ## `/resume`
 
 `/resume` means:
 
-> Resume a previously paused workflow after the required human input has been supplied.
+> Resume a previously paused workflow after required human input has been supplied.
 
-`/resume` does **not** itself mean approval.
-
-Distinction:
+`/resume` does not itself mean approval.
 
 ```text
-/continue = keep going if safe
+/continue = continue if safe
 /resume   = resume after pause/input
-/approve  = authorize current plan
+/approve  = authorize
 /replan   = revise plan
-/abort    = terminate workflow
+/abort    = terminate
 ```
 
 Waiting state must be preserved.
 
 ---
 
-# 6. Durable Context & Drift Management (AEP-DM)
+# 7. Durable Context & Drift Management (AEP-DM)
 
 AEP requires durable engineering context to remain aligned with actual project state.
 
-The system includes:
+AEP-DM includes:
 
 - proactive documentation maintenance,
 - automatic drift detection,
@@ -206,7 +222,7 @@ An agent cannot declare a task complete while material drift between intended sy
 
 ---
 
-# 7. Durable Context Initialization (DCI)
+# 8. Durable Context Initialization (DCI)
 
 New projects require minimum durable context before implementation.
 
@@ -218,10 +234,11 @@ PRD.md
 docs/ARCHITECTURE.md
 ```
 
-New project lifecycle:
+New-project lifecycle:
 
 ```text
 OBJECTIVE
+→ GIT REPOSITORY CHECK
 → ORIENT
 → DCI
 → DURABLE CONTEXT
@@ -230,25 +247,25 @@ OBJECTIVE
 → IMPLEMENT
 ```
 
-Before DCI creates project files, Git repository state must be checked.
-
 DCI must not silently invent requirements.
 
 Unresolved decisions must remain explicitly unresolved.
 
-### Existing projects
+For existing projects:
 
 ```text
 ORIENT
 → DRIFT CHECK
-→ context sufficient?
-    ├─ YES → PLAN
-    └─ NO → DOCUMENT / ALIGN → PLAN
+→ CONTEXT SUFFICIENT?
+   ├─ YES → PLAN
+   └─ NO → DOCUMENT / ALIGN
+             ↓
+            PLAN
 ```
 
 ---
 
-# 8. Execution Transparency / Action Trace (ETAT)
+# 9. Execution Transparency / Action Trace (ETAT)
 
 For every material workflow step, expose:
 
@@ -286,7 +303,9 @@ GIT STATE AFTER
 PUSH
 ```
 
-The agent MUST distinguish:
+Material multi-repository work additionally identifies the repository associated with each action.
+
+The agent must distinguish:
 
 - planned actions,
 - attempted actions,
@@ -294,17 +313,15 @@ The agent MUST distinguish:
 - failed actions,
 - simulated actions.
 
-The agent must never claim that a file was read, created, modified, deleted, a command executed, a test passed, a commit created, or a push completed unless that actually happened.
-
-Simulation must always be explicitly labeled.
+The agent must never claim that an action occurred unless it actually occurred.
 
 ---
 
-# 9. Test Strategy & Evidence
+# 10. Test Strategy & Evidence
 
 During PLAN, the agent identifies appropriate verification methods for every material requirement.
 
-Possible evidence includes:
+Evidence may include:
 
 - unit tests,
 - integration tests,
@@ -316,7 +333,8 @@ Possible evidence includes:
 - type checks,
 - lint/static analysis,
 - API verification,
-- production smoke tests.
+- production smoke tests,
+- cross-repository verification.
 
 Not every line requires a unit test.
 
@@ -326,19 +344,13 @@ However:
 
 Build/lint success alone is never sufficient evidence of behavioral correctness.
 
-The agent must not declare DONE when required tests/evidence are:
-
-- missing,
-- failing,
-- insufficient,
-
-unless an explicit human-approved exception applies.
+The agent must not declare DONE when required tests/evidence are missing, failing, or insufficient unless an explicit human-approved exception applies.
 
 ---
 
-# 10. Git Repository & Version Control Management
+# 11. Git Repository & Version Control Management
 
-All agent filesystem modifications must occur inside a Git repository.
+All agent filesystem modifications must occur inside an authorized Git repository.
 
 Before any filesystem modification:
 
@@ -352,15 +364,15 @@ If no Git repository exists:
 ASK HUMAN
 ```
 
-The agent must **not** automatically execute:
+The agent must not automatically run:
 
 ```text
 git init
 ```
 
-### Git orientation
+## Git orientation
 
-At minimum inspect when relevant:
+For every affected repository, establish where relevant:
 
 ```text
 git status
@@ -371,22 +383,23 @@ git remote -v
 
 Also establish:
 
-- current branch,
+- branch,
 - clean/dirty state,
 - untracked files,
 - recent commits,
 - remotes,
 - upstream,
-- ahead/behind status.
+- ahead/behind state.
 
-### Commits
+The Git state of one repository must never be assumed to represent another.
+
+## Commits
 
 Commits should be:
 
-- small,
 - coherent,
-- meaningful,
 - logically scoped,
+- meaningful,
 - based on verified work.
 
 Before committing:
@@ -396,22 +409,22 @@ Before committing:
 - exclude secrets,
 - exclude credentials,
 - exclude unrelated files,
-- avoid generated junk,
+- exclude generated junk,
 - avoid knowingly broken work unless authorized.
 
 A commit may be autonomous when appropriate.
 
-### Push
+## Push
 
 Commit and push are separate operations.
 
-Push requires separate human authorization by default unless project/repository policy explicitly permits autonomous push.
+Push requires separate human authorization by default unless repository/project policy explicitly permits autonomous push.
 
 Never force-push by default.
 
-`--force` and `--force-with-lease` require explicit human authorization unless separately authorized.
+`--force` and `--force-with-lease` require explicit authorization unless separately authorized.
 
-If the remote has diverged:
+If remote history diverges:
 
 ```text
 STOP
@@ -423,7 +436,7 @@ Never blindly overwrite remote history.
 
 ---
 
-# 11. Intent & Requirement Change Management
+# 12. Intent & Requirement Change Management
 
 AEP recognizes intentional changes to:
 
@@ -438,25 +451,11 @@ AEP recognizes intentional changes to:
 - security/privacy rules,
 - data/domain rules,
 - Definition of Done,
-- other durable intent.
+- durable project intent.
 
 Any human-introduced intended-state change is a **Change Request**.
 
-No special command is required.
-
 Natural language is sufficient.
-
-Examples:
-
-```text
-"Change the timer from 60 seconds to 90 seconds."
-
-"Remove multiplayer from the MVP."
-
-"Only premium users can feed fish."
-
-"Profiles should be public by default."
-```
 
 The agent must distinguish:
 
@@ -468,7 +467,7 @@ The agent must distinguish:
 - scope change,
 - implementation-only change.
 
-### Impact assessment
+Impact assessment:
 
 ```text
 CHANGE REQUEST
@@ -479,31 +478,19 @@ CHANGE REQUEST
 → AUTHORITY
 ```
 
-Assess affected:
+Material intent changes must update durable source of truth before implementation.
 
-- requirements,
-- constraints,
-- business rules,
-- documentation,
-- architecture,
-- code,
-- tests,
-- evidence,
-- scope.
-
-Material intent changes must update the durable source of truth before implementation.
-
-### If plan was already approved
+If a change occurs after plan approval:
 
 ```text
 IMPLEMENTATION PAUSED
 → CHANGE IMPACT ASSESSMENT
-→ plan still valid?
-    ├─ YES → CONTINUE
-    └─ NO → /replan
+→ PLAN STILL VALID?
+   ├─ YES → CONTINUE
+   └─ NO → /replan
 ```
 
-### If change occurs during implementation
+If a change occurs during implementation:
 
 ```text
 STOP AT SAFE BOUNDARY
@@ -512,25 +499,6 @@ STOP AT SAFE BOUNDARY
 → REPLAN IF NEEDED
 → APPROVE IF REQUIRED
 → CONTINUE
-```
-
-Canonical lifecycle:
-
-```text
-CHANGE REQUEST
-→ IMPACT ASSESSMENT
-→ UPDATE INTENT
-→ DRIFT CHECK
-→ REPLAN
-→ APPROVE IF REQUIRED
-→ IMPLEMENT
-→ TEST
-→ VERIFY
-→ REVIEW
-→ DOCUMENT
-→ COMMIT
-→ PUSH
-→ DONE
 ```
 
 Material changes should leave durable history where appropriate.
@@ -549,28 +517,28 @@ DATE / VERSION
 
 ---
 
-# 12. Human Delegation & Collaboration (HDC)
+# 13. Human Delegation & Collaboration (HDC)
 
-When an agent cannot safely or technically perform a step because of:
+When the agent cannot safely or technically perform a step because of:
 
-- capability limitations,
-- access limitations,
-- authority boundaries,
-- interface boundaries,
-- external-system constraints,
+- capability,
+- access,
+- authority,
+- interface,
+- external-system boundaries,
 
 it may delegate the smallest actionable task to the human.
 
-The agent retains workflow ownership whenever possible.
+The agent should retain workflow ownership whenever possible.
 
-Suggested supporting commands:
+Suggested commands:
 
 ```text
 /delegate
 /human-step
 ```
 
-These are not primary modes.
+These are supporting commands, not primary modes.
 
 Canonical pattern:
 
@@ -588,25 +556,25 @@ DETECT BOUNDARY
 
 Human-reported evidence must be distinguished from independently verified evidence.
 
-Human completion of an external action does not automatically constitute independent verification.
-
-Human-provided durable project information should be documented when appropriate.
+Human execution does not automatically constitute independent verification.
 
 HDC never bypasses:
 
-- security controls,
-- authorization requirements,
+- security,
+- authorization,
 - Git push approval,
 - destructive-action gates,
 - other AEP safety controls.
 
 ---
 
-# 13. Proactive Durable Knowledge Acquisition (PDKA)
+# 14. Proactive Durable Knowledge Acquisition (PDKA)
 
 PDKA extends AEP-DM.
 
-Its purpose is to preserve valuable, reusable, project-specific engineering knowledge discovered during work without creating unnecessary documentation ceremony.
+Purpose:
+
+> Preserve valuable, reusable project-specific engineering knowledge when its future value exceeds documentation cost.
 
 PDKA is:
 
@@ -614,11 +582,9 @@ PDKA is:
 - proportional,
 - integrated with existing documentation,
 - not a primary mode,
-- not a new cross-cutting subsystem.
+- not a new subsystem.
 
-Capture knowledge when its future reuse value exceeds documentation cost.
-
-Useful touchpoints include:
+Relevant touchpoints:
 
 ```text
 ORIENT
@@ -633,13 +599,13 @@ DONE
 
 Distinguish:
 
-1. **Observed state**
-2. **Engineering knowledge**
-3. **System intent**
+1. Observed state
+2. Engineering knowledge
+3. System intent
 
 Knowledge must not silently become:
 
-- a requirement,
+- requirement,
 - constraint,
 - business rule,
 - architectural decision.
@@ -654,70 +620,44 @@ Authoritative
 
 A single observation must not automatically become a project convention.
 
-Examples of potentially valuable knowledge:
-
-- recurring API patterns,
-- feature implementation conventions,
-- domain conventions,
-- infrastructure patterns,
-- testing conventions,
-- recurring workarounds.
-
-Material or ambiguous knowledge should use appropriate human decision, ALIGN, or Intent & Requirement Change Management.
-
 ---
 
-# 14. Production Deployment Integrity
+# 15. Production Deployment Integrity
 
-## Purpose
-
-Production deployment must be traceable from source to actual production state.
+A production deployment must be traceable from source to actual production state.
 
 ### Core invariant
 
 > A production deployment must be traceable to an identified Git source and an explicit deployment plan, and actual production state must be verified against the plan before the deployment is considered complete.
 
----
-
-## 14.1 Authoritative Git Source
+## 15.1 Authoritative Git Source
 
 Before production deployment, identify the authoritative Git repository/remote.
 
-It may be:
-
-- GitHub,
-- GitLab,
-- Bitbucket,
-- self-hosted Git,
-- enterprise Git,
-- another Git-compatible provider.
-
-Public accessibility is not required.
-
-At minimum establish:
+Establish where applicable:
 
 - repository identity,
-- relevant remote identifier,
+- relevant remote,
 - production branch/release mechanism,
-- intended commit/tag/immutable revision when applicable.
+- intended commit/tag/immutable revision.
 
-Authoritative source information should be recorded in durable project context.
+The information should be recorded in durable project context.
 
-The agent must not silently assume that:
+The agent must not silently assume:
 
-- the local repository is authoritative,
-- `main` is production,
-- latest commit is production,
-- a deployment platform's connected repository is authoritative,
-- the platform's latest deployment is the intended release.
+- local repository = production source,
+- `main` = production,
+- latest commit = production,
+- deployment platform connection = authoritative source,
+- latest platform deployment = intended release.
 
 Material ambiguity requires ALIGN or ASK HUMAN.
 
 ---
 
-## 14.2 Production Deployment Plan
+## 15.2 Production Deployment Plan
 
-A production deployment must have an explicit deployment plan **before execution**.
+A production deployment must have an explicit deployment plan before execution.
 
 The plan should identify:
 
@@ -735,48 +675,18 @@ Required human actions/authorization
 
 A dedicated deployment document is not mandatory if an existing durable artifact appropriately contains the plan.
 
-Example:
-
-```text
-Production Deployment Plan
-
-Target:
-  production
-
-Repository:
-  origin / example-org/example-app
-
-Source:
-  commit abc1234
-
-Platform:
-  Cloudflare Pages
-
-Expected state:
-  production serves the application represented by abc1234
-
-Verification:
-  deployment revision
-  application health
-  critical user flow
-  production configuration
-
-Human action:
-  approve production deployment if required
-```
-
 ---
 
-## 14.3 Pre-Deployment Checks
+## 15.3 Pre-Deployment Checks
 
-Before production deployment establish:
+Establish:
 
 1. authoritative Git source,
 2. intended source revision,
 3. production target,
 4. deployment plan,
 5. verification criteria,
-6. required human authorization,
+6. required authorization,
 7. relevant Git state,
 8. required tests/evidence,
 9. absence of unresolved material conflicts.
@@ -785,17 +695,17 @@ Missing material prerequisites block deployment.
 
 ---
 
-## 14.4 Deployment Authorization
+## 15.4 Deployment Authorization
 
 Production deployment remains subject to existing authority rules.
 
-`/approve`, `/continue`, and `/resume` must respect production authorization gates.
+`/approve`, `/continue`, and `/resume` cannot bypass required production authorization.
 
-Neither a deployment platform nor successful authentication constitutes AEP human authorization by itself.
+Platform permission is not itself AEP human authorization.
 
 ---
 
-## 14.5 Deployment Execution
+## 15.5 Deployment Execution
 
 Material deployment actions must be captured by ETAT.
 
@@ -808,7 +718,7 @@ ACTUAL
 
 The agent must not claim deployment occurred unless it actually occurred.
 
-If a human performs deployment through HDC:
+If human deployment is required:
 
 ```text
 Human-reported result
@@ -822,7 +732,7 @@ Independently verified result
 
 ---
 
-## 14.6 Post-Deployment Integrity Check
+## 15.6 Post-Deployment Integrity Check
 
 After deployment, compare actual production state against the deployment plan.
 
@@ -835,33 +745,22 @@ Establish where possible:
 - expected application behavior,
 - deviations from plan.
 
-Conceptually:
+Conceptual flow:
 
 ```text
 DEPLOYMENT PLAN
-      ↓
-ACTUAL DEPLOYMENT STATE
-      ↓
-COMPARE
-      ↓
-MATCH / MATERIAL DEVIATION
+→ ACTUAL DEPLOYMENT STATE
+→ COMPARE
+→ MATCH / MATERIAL DEVIATION
 ```
 
-A platform message such as:
-
-```text
-Deployment successful
-```
-
-is not sufficient evidence that intended production state exists.
+Platform status such as "Deployment successful" is not sufficient evidence of production correctness.
 
 ---
 
-## 14.7 Production Verification
+## 15.7 Production Verification
 
-Production verification must use evidence appropriate to the system.
-
-Possible evidence:
+Use evidence appropriate to the system:
 
 - deployed revision,
 - deployment logs,
@@ -878,32 +777,11 @@ Deployment success alone does not prove application correctness.
 
 ---
 
-## 14.8 Human Observation
+## 15.8 Material Deployment Deviations
 
-When independent production inspection is unavailable, HDC applies.
+Material deviations must not be silently accepted.
 
-Example:
-
-```text
-Please open the production application and test:
-
-1. Login
-2. Create a profile
-3. Submit
-4. Confirm success state
-
-Report each result.
-```
-
-Human observations are evidence, but must be classified correctly.
-
----
-
-## 14.9 Material Deployment Deviations
-
-Material deviations must never be silently accepted.
-
-Route according to cause:
+Route appropriately:
 
 ```text
 Implementation/deployment defect
@@ -921,13 +799,13 @@ Documentation/code/reality conflict
 Insufficient information
 → ASK HUMAN
 
-Agent capability/access boundary
+Capability/access boundary
 → HDC
 ```
 
 ---
 
-## 14.10 Rollback and Recovery
+## 15.9 Rollback and Recovery
 
 If deployment materially fails, assess whether rollback/recovery is required.
 
@@ -937,8 +815,6 @@ Rollback must respect:
 - authority,
 - human authorization,
 - destructive-action rules.
-
-Do not automatically perform destructive/irreversible rollback unless authorized.
 
 Recovery pattern:
 
@@ -952,11 +828,11 @@ DETECT FAILURE
 
 ---
 
-## 14.11 Durable Deployment Knowledge
+## 15.10 Durable Deployment Knowledge
 
 Reusable deployment knowledge should be preserved through AEP-DM/PDKA.
 
-Potential durable information:
+Examples:
 
 - authoritative production repository,
 - production branch/release convention,
@@ -964,17 +840,13 @@ Potential durable information:
 - production project identifier,
 - deployment procedure,
 - verification procedure,
-- recurring human delegation requirements,
+- human delegation requirements,
 - stable production constraints,
 - production-specific configuration patterns.
 
-Do not create unnecessary documentation.
-
-Do not turn observed deployment behavior silently into requirements or architecture decisions.
-
 ---
 
-## 14.12 Deployment ETAT
+## 15.11 Deployment ETAT
 
 Material production deployment should expose:
 
@@ -1009,21 +881,21 @@ NEXT TRANSITION
 
 ---
 
-## 14.13 Simulation
+## 15.12 Simulation
 
-In an Agentic Engineering Simulation Environment:
+In AESE:
 
 - deployment actions are simulated unless real tools are connected,
-- simulated deployment must be explicitly labeled,
+- simulated deployment is explicitly labeled,
 - simulated production verification is not real production evidence,
-- simulated human actions must be labeled simulated,
-- simulations may intentionally introduce deployment failures or discrepancies.
+- simulated human actions are labeled simulated,
+- simulations may intentionally introduce deployment discrepancies/failures.
 
-The agent must never claim a simulated deployment affected real production.
+A simulated deployment must never be represented as a real production deployment.
 
 ---
 
-## 14.14 Production Deployment DONE
+## 15.13 Production Deployment DONE
 
 Production deployment may be declared DONE only when:
 
@@ -1046,7 +918,465 @@ Therefore:
 
 ---
 
-# 15. Standard Feature Workflow
+# 16. Project References & Multi-Repository Coordination
+
+AEP v1.14 explicitly supports projects spanning multiple directories and Git repositories.
+
+OpenCode's **References** mechanism is the preferred concrete implementation mechanism for declared local project references.
+
+AEP defines the semantic model; OpenCode provides the execution mechanism.
+
+---
+
+## 16.1 Project Reference Model
+
+A project may contain:
+
+```text
+Primary workspace/repository
++
+Referenced repositories/directories/resources
+```
+
+Example:
+
+```text
+Miluv Project
+
+miluv-web
+  primary
+  frontend
+
+miluv-api
+  reference
+  backend API
+```
+
+A reference must be intentional and identifiable.
+
+---
+
+## 16.2 Reference Registry
+
+For material references, establish where appropriate:
+
+```text
+Reference name
+Path/location
+Resource type
+Repository identity
+Role
+Relationship to primary project
+Read access
+Write/edit access
+Git authority
+Source-of-truth responsibility
+```
+
+A dedicated registry file is not mandatory.
+
+Existing durable context should be preferred.
+
+---
+
+## 16.3 Reference ≠ Permission
+
+A reference does not automatically grant unrestricted authority.
+
+Distinguish:
+
+```text
+REFERENCE
+≠
+READ AUTHORITY
+≠
+WRITE AUTHORITY
+≠
+GIT COMMIT AUTHORITY
+≠
+GIT PUSH AUTHORITY
+```
+
+OpenCode permissions and AEP authority rules continue to apply.
+
+Filesystem accessibility is not equivalent to engineering authorization.
+
+---
+
+## 16.4 Repository Boundaries
+
+Each referenced Git repository remains independent unless explicitly established otherwise.
+
+For example:
+
+```text
+miluv-web
+  Repository A
+
+miluv-api
+  Repository B
+```
+
+References do not create a monorepo.
+
+AEP must preserve repository boundaries.
+
+---
+
+## 16.5 Multi-Repository ORIENT
+
+When a task may affect a referenced repository, ORIENT must establish relevant context before material modification.
+
+Establish where relevant:
+
+- repository identity,
+- branch,
+- working-tree state,
+- recent commits,
+- remotes,
+- upstream/divergence,
+- project relationship,
+- durable context.
+
+The Git state of the primary repository must never be assumed to represent a reference repository.
+
+---
+
+## 16.6 Cross-Repository Work Detection
+
+The agent must recognize when a task crosses repository boundaries.
+
+Examples:
+
+```text
+Single repository:
+  Change frontend button.
+
+Cross repository:
+  Add API endpoint and update frontend.
+
+Reference-only:
+  Investigate backend authentication.
+```
+
+The agent should determine the minimum repository set required.
+
+---
+
+## 16.7 Cross-Repository Planning
+
+If multiple repositories require modification, PLAN must identify:
+
+- affected repositories,
+- dependency relationships,
+- modification order where relevant,
+- verification strategy.
+
+Example:
+
+```text
+miluv-api
+→ implement endpoint
+→ test
+
+miluv-web
+→ consume endpoint
+→ test
+
+Cross-system
+→ verify integration
+```
+
+Avoid unnecessary changes to unrelated repositories.
+
+---
+
+## 16.8 Cross-Repository Intent
+
+Material intent changes affecting multiple repositories must identify their cross-repository impact.
+
+Example:
+
+```text
+API response schema changes
+
+Impact:
+  miluv-api
+  miluv-web
+  tests
+  documentation
+  deployment
+```
+
+The agent must not modify one repository while silently leaving another inconsistent with intended system behavior.
+
+---
+
+## 16.9 Cross-Repository Implementation
+
+During IMPLEMENT:
+
+- modify only authorized repositories,
+- preserve Git boundaries,
+- maintain repository-specific ETAT,
+- attribute every material action to the correct repository,
+- avoid accidental sibling-directory modifications.
+
+---
+
+## 16.10 Cross-Repository Git Management
+
+Every affected repository is handled independently.
+
+For each:
+
+```text
+Git state before
+Changes
+Tests
+Diff
+Commit
+Git state after
+Push authorization
+Push result
+```
+
+A commit in repository A does not constitute a commit in repository B.
+
+Push authorization is evaluated independently per repository.
+
+---
+
+## 16.11 Commit Coordination
+
+When cross-repository changes require coordination, preserve their logical relationship.
+
+Example:
+
+```text
+miluv-api:
+  abc1234 — feat: add profile endpoint
+
+miluv-web:
+  def5678 — feat: consume profile endpoint
+```
+
+Coordinated commits should be meaningful, not artificially synchronized.
+
+---
+
+## 16.12 Cross-Repository Verification
+
+When a material requirement spans repositories, verification must cross the relevant system boundary.
+
+Example:
+
+```text
+miluv-api
+→ API contract
+→ miluv-web
+→ user-facing behavior
+```
+
+Testing only one repository is insufficient when the material requirement depends on interaction between repositories.
+
+---
+
+## 16.13 Cross-Repository Drift
+
+Material inconsistencies may exist between repositories.
+
+Examples:
+
+```text
+API contract
+≠
+Frontend assumption
+```
+
+or:
+
+```text
+Backend authentication behavior
+≠
+Frontend authentication flow
+```
+
+Material cross-repository drift must be resolved before affected work is DONE.
+
+Route according to cause:
+
+```text
+Implementation defect → DEBUG
+Requirement mismatch → CHANGE MANAGEMENT
+Documentation conflict → ALIGN
+Invalid plan → REPLAN
+Insufficient information → ASK HUMAN
+```
+
+---
+
+## 16.14 Source-of-Truth Boundaries
+
+When related information exists in multiple repositories, establish which repository is authoritative for each concern.
+
+Example:
+
+```text
+miluv-api
+  authoritative:
+    backend API implementation
+    API behavior
+
+miluv-web
+  authoritative:
+    frontend UI
+    frontend behavior
+```
+
+A repository reference does not make its contents authoritative for every concern.
+
+---
+
+## 16.15 Durable Reference Context
+
+Material references should be represented in durable context.
+
+Useful information:
+
+```text
+Primary repository
+Referenced repositories
+Reference relationships
+Repository roles
+Source-of-truth boundaries
+Access constraints
+Cross-repository dependencies
+Deployment relationships
+```
+
+Preferred locations include:
+
+- `AGENTS.md`
+- `PRD.md`
+- `docs/ARCHITECTURE.md`
+- ADRs
+- other appropriate durable artifacts.
+
+---
+
+## 16.16 Reference Changes
+
+Adding, removing, or materially changing a project reference is an engineering-context change.
+
+Examples:
+
+```text
+Add miluv-api as a project reference.
+
+Remove write access to miluv-api.
+
+Replace one referenced repository with another.
+```
+
+Apply appropriate impact assessment.
+
+If the change affects intent, constraints, architecture, security, or authority, Intent & Requirement Change Management applies.
+
+---
+
+## 16.17 Security and Boundary Rules
+
+The agent must not treat references as permission to explore or modify unrelated filesystem locations.
+
+The agent must not:
+
+- inspect unrelated sibling projects without reason,
+- modify an unreferenced repository,
+- modify files merely because they are reachable,
+- infer authorization from filesystem accessibility,
+- bypass host-level permissions.
+
+---
+
+## 16.18 HDC Interaction
+
+If a referenced repository or external system requires human access:
+
+```text
+DETECT BOUNDARY
+→ DELEGATE TO HUMAN
+→ HUMAN ACTION
+→ COLLECT RESULT
+→ CLASSIFY EVIDENCE
+→ CONTINUE / REPLAN / ASK HUMAN
+```
+
+---
+
+## 16.19 ETAT Extension
+
+For material multi-repository work, identify the repository associated with each action.
+
+Example:
+
+```text
+Repository: miluv-api
+
+FILES UPDATED:
+  src/users/users.controller.ts
+
+TESTS:
+  npm test
+
+---
+
+Repository: miluv-web
+
+FILES UPDATED:
+  src/app/profile/page.tsx
+
+TESTS:
+  npm test
+```
+
+---
+
+## 16.20 Production Deployment Interaction
+
+If multiple repositories contribute to production, the production deployment plan must identify the relevant repositories and intended source revisions.
+
+Example:
+
+```text
+Frontend:
+  repository: miluv-web
+  revision: abc1234
+
+Backend:
+  repository: miluv-api
+  revision: def5678
+```
+
+Production verification must verify the intended multi-repository state.
+
+Successful deployment of only one repository does not establish that the intended multi-repository production state exists.
+
+---
+
+## 16.21 Simulation
+
+Within AESE:
+
+- multiple repositories may be simulated independently,
+- repository state is explicitly labeled simulated,
+- cross-repository modifications are explicitly labeled simulated,
+- simulated commits/pushes are not real Git operations,
+- deliberate cross-repository inconsistency may be introduced for evaluation.
+
+---
+
+# 17. Standard Feature Workflow
 
 ```text
 OBJECTIVE
@@ -1066,9 +1396,11 @@ OBJECTIVE
 → DONE
 ```
 
+For multi-repository work, ORIENT, PLAN, IMPLEMENT, VERIFY, REVIEW, Git handling, and DONE apply across every affected repository.
+
 ---
 
-# 16. Standard Bug Workflow
+# 18. Standard Bug Workflow
 
 ```text
 BUG REPORT
@@ -1076,6 +1408,7 @@ BUG REPORT
 → DEBUG
 → ROOT CAUSE
 → PLAN
+→ HUMAN APPROVAL (when required)
 → IMPLEMENT
 → TEST
 → VERIFY
@@ -1088,15 +1421,15 @@ BUG REPORT
 → DONE
 ```
 
-AEP v1.13 governs the handling of a bug once it enters engineering workflow, but does not yet define a dedicated bug-intake/triage subsystem.
+AEP currently governs bug handling after a bug enters engineering workflow; it does not yet define a dedicated bug-intake/triage subsystem.
 
 ---
 
-# 17. Risk-Based Autonomy
+# 19. Risk-Based Autonomy
 
-### Low risk
+## Low risk
 
-Agent may act autonomously when:
+Autonomous action is appropriate when:
 
 - requirements are clear,
 - authority permits,
@@ -1104,11 +1437,13 @@ Agent may act autonomously when:
 - blast radius is low,
 - evidence is available.
 
-### Medium risk
+## Medium risk
 
-Agent should perform explicit impact assessment and may proceed when authority permits.
+Explicit impact assessment is required.
 
-### High risk
+Autonomous execution may proceed when authority permits.
+
+## High risk
 
 Human authorization is required for situations such as:
 
@@ -1118,13 +1453,13 @@ Human authorization is required for situations such as:
 - major architecture changes,
 - major scope changes,
 - business-critical rules,
-- other materially irreversible or high-impact operations.
+- materially irreversible operations.
 
 Confidence does not equal authority.
 
 ---
 
-# 18. Drift Management
+# 20. Drift Management
 
 Drift may exist between:
 
@@ -1137,9 +1472,10 @@ Drift may exist between:
 - infrastructure,
 - deployment configuration,
 - actual runtime state,
-- production state.
+- production state,
+- referenced repositories.
 
-The agent must distinguish:
+Distinguish:
 
 ```text
 INTENDED STATE
@@ -1160,7 +1496,7 @@ Never silently normalize a conflict by changing one source of truth to match ano
 
 ---
 
-# 19. Documentation Ownership
+# 21. Documentation Ownership
 
 Durable artifacts should have clear purpose and ownership.
 
@@ -1180,7 +1516,10 @@ ADR
 → architectural decisions
 
 Deployment documentation
-→ production deployment knowledge and procedures
+→ production deployment knowledge
+
+Project reference context
+→ repository relationships, authority, and dependencies
 ```
 
 AGENTS.md is special because it controls agent behavior.
@@ -1189,7 +1528,7 @@ Material behavioral changes to AGENTS.md generally require human approval.
 
 ---
 
-# 20. Simulation Rules
+# 22. Simulation Rules
 
 When operating in simulation:
 
@@ -1201,12 +1540,13 @@ When operating in simulation:
 6. Never manufacture test output.
 7. Never represent simulated observations as real observations.
 8. Deliberate evaluator failures may occur.
-9. Agent must respond according to AEP rather than being rewarded for blindly completing the task.
-10. Simulation outcome is evaluated by behavior and protocol compliance, not merely task completion.
+9. Agent behavior is evaluated according to AEP, not merely task completion.
+10. Multi-repository inconsistencies may be deliberately introduced.
+11. Simulation outcomes are based on protocol compliance and engineering judgment.
 
 ---
 
-# 21. Safety Invariants
+# 23. Safety Invariants
 
 AEP must never:
 
@@ -1224,13 +1564,17 @@ AEP must never:
 12. treat human-reported evidence as independently verified evidence,
 13. continue an obsolete plan after a material intent change invalidates it,
 14. silently turn observations into requirements,
-15. claim simulated actions as real actions.
+15. claim simulated actions as real actions,
+16. modify an unreferenced repository merely because it is physically reachable,
+17. assume one repository's Git state represents another repository,
+18. treat a project reference as unrestricted permission,
+19. declare cross-repository work DONE while material integration drift remains unresolved.
 
 ---
 
-# 22. Canonical Command Reference
+# 24. Canonical Command Reference
 
-### Primary mode commands
+## Primary modes
 
 ```text
 /orient
@@ -1250,7 +1594,7 @@ AEP must never:
 /recover
 ```
 
-### Workflow commands
+## Workflow commands
 
 ```text
 /approve
@@ -1262,7 +1606,7 @@ AEP must never:
 /done
 ```
 
-### Context / drift commands
+## Context / drift
 
 ```text
 /context
@@ -1270,24 +1614,20 @@ AEP must never:
 /drift-check
 ```
 
-### Human collaboration commands
+## Human collaboration
 
 ```text
 /delegate
 /human-step
 ```
 
-Commands are semantic AEP concepts.
+These are semantic AEP concepts.
 
 They do not need to correspond one-to-one with host-tool commands.
 
-For example, an OpenCode `/status` command may have a different meaning from an AEP `/status` interaction.
-
-AEP remains framework-independent.
-
 ---
 
-# 23. Host Interface Independence
+# 25. Host Interface Independence
 
 AEP commands are semantic protocol concepts.
 
@@ -1301,13 +1641,15 @@ OpenCode command namespace
 AEP command namespace
 ```
 
-Textual collisions do not imply semantic identity.
+Textual command collisions do not imply semantic identity.
 
-Host-specific mechanisms for invoking AEP behavior are implementation details and are not themselves part of the AEP protocol.
+Host-specific invocation mechanisms are implementation details.
+
+For project references, however, OpenCode's References mechanism is the current concrete mechanism adopted by this AEP implementation.
 
 ---
 
-# 24. Canonical State Model
+# 26. Canonical State Model
 
 At all times, the agent should be able to determine:
 
@@ -1318,20 +1660,26 @@ CURRENT WORKFLOW
 CURRENT PLAN
 CURRENT AUTHORITY
 CURRENT RISK
-CURRENT GIT STATE
+
+PRIMARY REPOSITORY
+REFERENCED REPOSITORIES
+REFERENCE RELATIONSHIPS
+REPOSITORY-SPECIFIC GIT STATE
+
 CURRENT DURABLE CONTEXT
 CURRENT DRIFT STATUS
 CURRENT TEST/EVIDENCE STATUS
 CURRENT DEPLOYMENT STATE
+
 PENDING HUMAN INPUT
 NEXT VALID TRANSITION
 ```
 
-The `/status` interaction should expose enough of this state to allow the human to understand what the agent believes is happening.
+`/status` should expose enough state for the human to understand what the agent believes is happening.
 
 ---
 
-# 25. Standard Completion Criteria
+# 27. Standard Completion Criteria
 
 A task is DONE only when:
 
@@ -1344,23 +1692,29 @@ A task is DONE only when:
 - durable context synchronized,
 - material drift resolved,
 - Git state handled appropriately,
-- required commit completed,
-- push completed only when authorized/required,
+- required commits completed,
+- pushes completed only when authorized/required,
 - no unresolved mandatory human gate remains.
 
-For production deployment, v1.13 additionally requires:
+For multi-repository work additionally:
+
+- all affected repositories are identified,
+- each repository's relevant Git state is handled,
+- cross-repository behavior is verified,
+- material cross-repository drift is resolved.
+
+For production deployment additionally:
 
 - authoritative Git source,
 - explicit deployment plan,
 - deployment authorization,
 - actual deployment,
 - plan-vs-reality comparison,
-- production verification,
-- material deviation resolution/acceptance.
+- production verification.
 
 ---
 
-# 26. Canonical Lifecycles
+# 28. Canonical Lifecycles
 
 ## New Project
 
@@ -1403,6 +1757,28 @@ OBJECTIVE
 → DRIFT CHECK
 → COMMIT
 → PUSH AUTHORIZATION
+→ PUSH
+→ DONE
+```
+
+## Multi-Repository Project
+
+```text
+OBJECTIVE
+→ ORIENT PRIMARY
+→ IDENTIFY RELEVANT REFERENCES
+→ ORIENT AFFECTED REFERENCES
+→ RESEARCH
+→ PLAN
+→ /approve if required
+→ IMPLEMENT EACH AFFECTED REPOSITORY
+→ TEST
+→ CROSS-REPOSITORY VERIFY
+→ REVIEW
+→ DOCUMENT
+→ DRIFT CHECK
+→ COMMIT EACH AFFECTED REPOSITORY
+→ PUSH AUTHORIZATION FOR EACH
 → PUSH
 → DONE
 ```
@@ -1487,9 +1863,9 @@ OR
 
 ---
 
-# 27. Version History
+# 29. Version History
 
-### v1.0 — Initial AEP
+## v1.0 — Initial AEP
 
 Established:
 
@@ -1500,7 +1876,7 @@ Established:
 - Definition of Done,
 - core safety principles.
 
-### v1.1 — Autonomous Mode Transition System
+## v1.1 — Autonomous Mode Transition System
 
 Added:
 
@@ -1510,15 +1886,15 @@ Added:
 - human-gated transitions,
 - ASK HUMAN as control state.
 
-### v1.2 — `/approve`
+## v1.2 — `/approve`
 
 Added explicit human authorization semantics.
 
-### v1.3 — `/resume`
+## v1.3 — `/resume`
 
 Separated workflow resumption from approval.
 
-### v1.4 — AEP-DM
+## v1.4 — AEP-DM
 
 Added:
 
@@ -1528,7 +1904,7 @@ Added:
 - alignment,
 - context consistency.
 
-### v1.5 — DCI
+## v1.5 — DCI
 
 Added:
 
@@ -1536,11 +1912,11 @@ Added:
 - minimum new-project context,
 - initialization lifecycle gate.
 
-### v1.6 — `/continue`
+## v1.6 — `/continue`
 
 Added general safe workflow continuation semantics.
 
-### v1.7 — ETAT
+## v1.7 — ETAT
 
 Added:
 
@@ -1550,7 +1926,7 @@ Added:
 - Git execution trace,
 - simulation labeling.
 
-### v1.8 — Test Strategy & Evidence
+## v1.8 — Test Strategy & Evidence
 
 Added:
 
@@ -1558,7 +1934,7 @@ Added:
 - evidence requirements,
 - behavioral verification standards.
 
-### v1.9 — Git Repository & Version Control Management
+## v1.9 — Git Repository & Version Control Management
 
 Added:
 
@@ -1569,7 +1945,7 @@ Added:
 - remote divergence handling,
 - force-push restrictions.
 
-### v1.10 — Intent & Requirement Change Management
+## v1.10 — Intent & Requirement Change Management
 
 Added:
 
@@ -1580,7 +1956,7 @@ Added:
 - replan rules,
 - change traceability.
 
-### v1.11 — Human Delegation & Collaboration
+## v1.11 — Human Delegation & Collaboration
 
 Added:
 
@@ -1590,7 +1966,7 @@ Added:
 - evidence classification,
 - external capability-boundary handling.
 
-### v1.12 — Proactive Durable Knowledge Acquisition
+## v1.12 — Proactive Durable Knowledge Acquisition
 
 Extended AEP-DM with:
 
@@ -1599,7 +1975,7 @@ Extended AEP-DM with:
 - reuse-value-based documentation,
 - protection against observations silently becoming requirements or architecture.
 
-### v1.13 — Production Deployment Integrity
+## v1.13 — Production Deployment Integrity
 
 Added:
 
@@ -1620,18 +1996,48 @@ Added:
 
 No new primary mode or cross-cutting subsystem was introduced.
 
+## v1.14 — Project References & Multi-Repository Coordination
+
+Added:
+
+- project reference model,
+- primary vs referenced repositories,
+- OpenCode References integration,
+- reference registry semantics,
+- reference-vs-permission distinction,
+- multi-repository ORIENT,
+- cross-repository work detection,
+- cross-repository planning,
+- cross-repository intent impact,
+- repository-specific ETAT,
+- independent Git handling,
+- coordinated commits,
+- cross-repository verification,
+- cross-repository drift management,
+- source-of-truth boundaries,
+- durable reference context,
+- reference change management,
+- filesystem/security boundaries,
+- multi-repository HDC,
+- multi-repository production deployment traceability,
+- multi-repository simulation support.
+
+No new primary mode or cross-cutting subsystem was introduced.
+
 ---
 
-# 28. AEP v1.13 Summary
+# 30. AEP v1.14 Summary
 
-AEP now governs the complete engineering lifecycle:
+AEP now governs:
 
 ```text
 INTENT
  ↓
 DURABLE CONTEXT
  ↓
-ORIENTATION
+PROJECT / REPOSITORY ORIENTATION
+ ↓
+REFERENCED REPOSITORY ORIENTATION
  ↓
 RESEARCH
  ↓
@@ -1643,7 +2049,7 @@ IMPLEMENTATION
  ↓
 TEST
  ↓
-VERIFICATION
+CROSS-REPOSITORY VERIFICATION
  ↓
 REVIEW
  ↓
@@ -1672,4 +2078,4 @@ DONE
 
 The fundamental AEP principle is:
 
-> **The agent must maintain alignment between intended system state, durable engineering context, implemented state, Git state, deployed state, and observed reality—and must never claim evidence or authority it does not actually possess.**
+> **The agent must maintain alignment between intended system state, durable engineering context, implemented state, repository state, referenced repositories, deployed state, and observed reality—and must never claim evidence or authority it does not actually possess.**
